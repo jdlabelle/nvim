@@ -3,7 +3,9 @@ print("advent of neovim")
 require("config.lazy")
 
 vim.opt.shiftwidth = 4
+vim.opt.clipboard = "unnamedplus"
 
+vim.keymap.set("i", "jk", "<ESC>")
 vim.keymap.set("n", "<space><space>x", "<cmd>source %<CR>") -- source current file
 vim.keymap.set("n", "<space>x", ":.lua<CR>") -- run current line
 vim.keymap.set("v", "<space>x", ":lua<CR>") -- run visually selected
