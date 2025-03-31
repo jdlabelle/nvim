@@ -30,3 +30,33 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     vim.highlight.on_yank()
   end,
 })
+
+vim.api.nvim_create_autocmd('TermOpen', {
+  group = vim.api.nvim_create_augroup('custom-term-open', { clear = true }),
+  callback = function()
+    vim.opt.number = false
+    vim.opt.relativenumber = false
+  end,
+})
+
+-- Open the built-in nvim terminal in the specified format
+local job_id = 0
+vim.keymap.set("n", "<leader>st", function()
+  vim.cmd.vnew()
+  vim.cmd.term()
+  vim.cmd.wincmd("J")
+  vim.api.nvim_win_set_height(0, 15)
+  job_id = vim.bo.channel -- goes with below
+end)
+
+-- Run a custom command in the nvim terminal (you can be in a different window)
+vim.keymap.set("n", "<leader>tr", function()
+  -- make, python test, etc
+  -- some bash command to run
+  vim.fn.chansend(job_id, { "tree .\r\n" })
+end)
+
+vim.keymap.set("t", "<leader>tx", "<C-\\><C-N>") -- exit terminal mode
+
+-- Oil.nvim
+vim.keymap.set("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
