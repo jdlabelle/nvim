@@ -11,7 +11,7 @@ vim.keymap.set("n", "<M-j>", "<cmd>cnext<CR>")                           -- Jump
 vim.keymap.set("n", "<M-k>", "<cmd>cprev<CR>")                           -- Jump backward to the previous item in quickfix
 vim.keymap.set("n", "<leader>qf", ":lua vim.diagnostic.setqflist()<CR>") -- Set the quickfix list with all diagnostic issues from buffers
 vim.keymap.set("n", ",v", "<C-v>")                                       -- needed for WSL
-vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
+-- inactive (using Oil.nvim) vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
 vim.keymap.set("i", "jk", "<ESC>")
 vim.keymap.set("n", "<space><space>x", "<cmd>source %<CR>") -- source current file
 vim.keymap.set("n", "<space>x", ":.lua<CR>")                -- run current line
