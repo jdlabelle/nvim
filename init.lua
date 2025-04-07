@@ -18,6 +18,20 @@ vim.keymap.set("n", "<space><space>x", "<cmd>source %<CR>") -- source current fi
 vim.keymap.set("n", "<space>x", ":.lua<CR>")                -- run current line
 vim.keymap.set("v", "<space>x", ":lua<CR>")                 -- run visually selected
 
+-- easy buffer switching
+vim.keymap.set("n", "<leader>n", "<cmd>bn<CR>", { desc = "Next Buffer" })
+vim.keymap.set("n", "<leader>p", "<cmd>bp<CR>", { desc = "Previous Buffer" })
+vim.keymap.set("n", "<leader>d", "<cmd>bd<CR>", { desc = "Delete Buffer" })
+vim.keymap.set("n", "<leader>l", "<cmd>ls<CR>", { desc = "List Buffers" })
+
+-- Keep cursor in middle of screen when scrolling with Ctrl+d/Ctrl+u
+vim.keymap.set("n", "<C-d>", "<C-d>zz")
+vim.keymap.set("n", "<C-u>", "<C-u>zz")
+
+-- keep search terms in the middle of the screen
+vim.keymap.set("n", "n", "nzzzv")
+vim.keymap.set("n", "N", "Nzzzv")
+
 -- Needed this line to show the text on lsp warnings/errors - appears not needed anymore once lspconfig is set up...
 vim.diagnostic.config({ virtual_text = true })
 
