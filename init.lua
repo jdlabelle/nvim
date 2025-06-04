@@ -32,8 +32,8 @@ vim.keymap.set("n", "<C-u>", "<C-u>zz")
 vim.keymap.set("n", "n", "nzzzv")
 vim.keymap.set("n", "N", "Nzzzv")
 
--- Needed this line to show the text on lsp warnings/errors - appears not needed anymore once lspconfig is set up...
-vim.diagnostic.config({ virtual_text = true })
+-- Needed this line to show the text on lsp warnings/errors, this is now handled in completion.lua
+--vim.diagnostic.config({ virtual_text = true })
 
 -- Highlight when yanking (copying) text
 -- Try it with 'yap' in normal mode
