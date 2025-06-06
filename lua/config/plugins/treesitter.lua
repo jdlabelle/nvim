@@ -5,7 +5,7 @@ return {
     config = function()
       require 'nvim-treesitter.configs'.setup {
         -- A list of parser names, or "all" (the listed parsers MUST always be installed)
-        ensure_installed = { "python", "bash", "lua", "vim", "vimdoc", "query", "markdown", "markdown_inline" },
+        ensure_installed = { "python", "bash", "lua", "vim", "vimdoc", "query", "markdown", "markdown_inline", "html", "yaml" },
         sync_install = false,
 
         -- Automatically install missing parsers when entering buffer
