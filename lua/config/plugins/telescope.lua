@@ -21,10 +21,18 @@ return {
 
     vim.keymap.set("n", "<leader>fh", require('telescope.builtin').help_tags, { desc = 'Telescope [F]ind [H]elp' })
     vim.keymap.set("n", "<leader>ff", require('telescope.builtin').find_files, { desc = 'Telescope [F]ind [F]iles' })
+
     vim.keymap.set('n', '<leader>fb', require('telescope.builtin').buffers,
       { desc = 'Telescope [F]ind existing [B]uffers' })
+
     vim.keymap.set('n', '<leader>fw', require('telescope.builtin').grep_string,
       { desc = 'Telescope [F]ind current [W]ord under cursor' })
+
+    vim.keymap.set('n', '<leader>fo', function()
+      require('telescope.builtin').find_files {
+        cwd = '~/wiki'
+      }
+    end, { desc = 'Telescope [F]ind [O]bsidian notes' })
 
     vim.keymap.set("n", "<leader>fn", function()
       require('telescope.builtin').find_files {
