@@ -30,6 +30,10 @@ return {
         --   notes_subdir = "notes",
         -- },
       },
+      {
+        name = "thesis",
+        path = "~/thesis/notes"
+      },
     },
 
     -- see below for full list of options 👇
@@ -341,8 +345,9 @@ return {
       format = "{{properties}} properties {{backlinks}} backlinks {{words}} words {{chars}} chars",
     },
     -- My custom keymaps
-    vim.keymap.set("n", "<leader>os", ":Obsidian search<CR>", { desc = "Obsidian Search" }),
-    vim.keymap.set("n", "<leader>of", ":Obsidian quick_switch<CR>", { desc = "Obsidian Quick Switch" }),
-    vim.keymap.set("n", "<leader>on", ":Obsidian new<CR>", { desc = "Obsidian New Note" }),
+    vim.keymap.set("n", "<leader>os", ":Obsidian search<CR>", { desc = "[O]bsidian [S]earch" }),
+    vim.keymap.set("n", "<leader>of", ":Obsidian quick_switch<CR>", { desc = "[O]bsidian Quick Switch" }),
+    vim.keymap.set("n", "<leader>on", ":Obsidian new<CR>", { desc = "[O]bsidian [N]ew Note" }),
+    vim.keymap.set("n", "<leader>ow", ":Obsidian workspace<CR>", { desc = "[O]bsidian Switch [W]orkspace" }),
   },
 }
