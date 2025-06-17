@@ -350,5 +350,6 @@ return {
     vim.keymap.set("n", "<leader>of", ":Obsidian quick_switch<CR>", { desc = "[O]bsidian Quick Switch" }),
     vim.keymap.set("n", "<leader>on", ":Obsidian new<CR>", { desc = "[O]bsidian [N]ew Note" }),
     vim.keymap.set("n", "<leader>ow", ":Obsidian workspace<CR>", { desc = "[O]bsidian Switch [W]orkspace" }),
+    vim.keymap.set("n", "<leader>ot", ":Obsidian new_from_template<CR>", { desc = "[O]bsidian new from [T]emplate" }),
   },
 }
