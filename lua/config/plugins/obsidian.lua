@@ -19,6 +19,7 @@ return {
     "nvim-telescope/telescope.nvim",
     "nvim-treesitter/nvim-treesitter",
   },
+
   ---@module 'obsidian'
   ---@type obsidian.config.ClientOpts
   opts = {
@@ -42,6 +43,9 @@ return {
     -- levels defined by "vim.log.levels.\*".
     log_level = vim.log.levels.INFO,
 
+    -- Move away from legacy commands IE `ObsidianBacklinks` to `Obsidian backlinks`
+    legacy_commands = false,
+
     daily_notes = {
       -- Optional, if you keep daily notes in a separate directory.
       folder = "dailies",
@@ -63,32 +67,6 @@ return {
       blink = true,
       -- Trigger completion at 2 chars.
       min_chars = 2,
-    },
-
-    -- Optional, configure key mappings. These are the defaults. If you don't want to set any keymappings this
-    -- way then set 'mappings = {}'.
-    mappings = {
-      -- Overrides the 'gf' mapping to work on markdown/wiki links within your vault.
-      ["gf"] = {
-        action = function()
-          return require("obsidian").util.gf_passthrough()
-        end,
-        opts = { noremap = false, expr = true, buffer = true },
-      },
-      -- Toggle check-boxes.
-      ["<leader>ch"] = {
-        action = function()
-          return require("obsidian").util.toggle_checkbox()
-        end,
-        opts = { buffer = true },
-      },
-      -- Smart action depending on context: follow link, show notes with tag, toggle checkbox, or toggle heading fold
-      ["<cr>"] = {
-        action = function()
-          return require("obsidian").util.smart_action()
-        end,
-        opts = { buffer = true, expr = true },
-      },
     },
 
     -- Where to put new notes. Valid options are
@@ -177,6 +155,9 @@ return {
       time_format = "%H:%M",
       -- A map for custom variables, the key should be the variable and the value a function
       substitutions = {},
+      -- A map for configuring unique directories and paths for specific templates
+      --- See: https://github.com/obsidian-nvim/obsidian.nvim/wiki/Template#customizations
+      customizations = {},
     },
 
     -- Sets how you follow URLs
@@ -193,12 +174,17 @@ return {
       -- vim.ui.open(img, { cmd = { "loupe" } })
     end,
 
-    -- Optional, set to true if you use the Obsidian Advanced URI plugin.
-    -- https://github.com/Vinzent03/obsidian-advanced-uri
-    -- use_advanced_uri = false,
-
-    -- Optional, set to true to force ':Obsidian open' to bring the app to the foreground.
-    -- open_app_foreground = false,
+    ---@class obsidian.config.OpenOpts
+    ---
+    ---Opens the file with current line number
+    ---@field use_advanced_uri? boolean
+    ---
+    ---Function to do the opening, default to vim.ui.open
+    ---@field func? fun(uri: string)
+    open = {
+      use_advanced_uri = false,
+      func = vim.ui.open,
+    },
 
     picker = {
       -- Set your preferred picker. Can be one of 'telescope.nvim', 'fzf-lua', 'mini.pick' or 'snacks.pick'.
@@ -222,9 +208,9 @@ return {
     -- Optional, by default, `:ObsidianBacklinks` parses the header under
     -- the cursor. Setting to `false` will get the backlinks for the current
     -- note instead. Doesn't affect other link behaviour.
-    -- backlinks = {
-    --   parse_headers = true
-    -- },
+    backlinks = {
+      parse_headers = true
+    },
 
     -- Optional, sort search results by "path", "modified", "accessed", or "created".
     -- The recommend value is "modified" and `true` for `sort_reversed`, which means, for example,
@@ -239,6 +225,8 @@ return {
     -- 1. "current" (the default) - to always open in the current window
     -- 2. "vsplit" - to open in a vertical split if there's not already a vertical split
     -- 3. "hsplit" - to open in a horizontal split if there's not already a horizontal split
+    -- 4. "vsplit_force" - always open a new vertical split if the file is not in the adjacent vsplit.
+    -- 5. "hsplit_force" - always open a new horizontal split if the file is not in the adjacent hsplit.
     open_notes_in = "current",
 
     -- Optional, define your own callbacks to further customize behavior.
@@ -276,19 +264,6 @@ return {
       update_debounce = 200,  -- update delay after a text change (in milliseconds)
       max_file_length = 5000, -- disable UI features for files with more than this many lines
       -- Define how various check-boxes are displayed
-      checkboxes = {
-        -- NOTE: the 'char' value has to be a single character, and the highlight groups are defined below.
-        [" "] = { char = "󰄱", hl_group = "ObsidianTodo" },
-        ["x"] = { char = "", hl_group = "ObsidianDone" },
-        [">"] = { char = "", hl_group = "ObsidianRightArrow" },
-        ["~"] = { char = "󰰱", hl_group = "ObsidianTilde" },
-        ["!"] = { char = "", hl_group = "ObsidianImportant" },
-        -- Replace the above with this if you don't have a patched font:
-        -- [" "] = { char = "☐", hl_group = "ObsidianTodo" },
-        -- ["x"] = { char = "✔", hl_group = "ObsidianDone" },
-
-        -- You can also add more custom ones...
-      },
       -- Use bullet marks for non-checkbox lists.
       bullets = { char = "•", hl_group = "ObsidianBullet" },
       external_link_icon = { char = "", hl_group = "ObsidianExtLinkIcon" },
@@ -314,37 +289,42 @@ return {
       },
     },
 
-    -- Specify how to handle attachments.
+    ---@class obsidian.config.AttachmentsOpts
+    ---Default folder to save images to, relative to the vault root.
+    ---@field img_folder? string
+    ---Default name for pasted images
+    ---@field img_name_func? fun(): string
+    ---Default text to insert for pasted images, for customizing, see: https://github.com/obsidian-nvim/obsidian.nvim/wiki/Images
+    ---@field img_text_func? fun(path: obsidian.Path): string
+    ---Whether to confirm the paste or not. Defaults to true.
+    ---@field confirm_img_paste? boolean
     attachments = {
-      -- The default folder to place images in via `:Obsidian paste_img`.
-      -- If this is a relative path it will be interpreted as relative to the vault root.
-      -- You can always override this per image by passing a full path to the command instead of just a filename.
-      img_folder = "assets/imgs", -- This is the default
-
-      -- A function that determines default name or prefix when pasting images via `:Obsidian paste_img`.
-      ---@return string
+      img_folder = "assets/imgs",
       img_name_func = function()
-        -- Prefix image names with timestamp.
         return string.format("Pasted image %s", os.date "%Y%m%d%H%M%S")
       end,
-
-      -- A function that determines the text to insert in the note when pasting an image.
-      -- It takes two arguments, the `obsidian.Client` and an `obsidian.Path` to the image file.
-      -- This is the default implementation.
-      ---@param client obsidian.Client
-      ---@param path obsidian.Path the absolute path to the image file
-      ---@return string
-      img_text_func = function(client, path)
-        path = client:vault_relative_path(path) or path
-        return string.format("![%s](%s)", path.name, path)
-      end,
+      confirm_img_paste = true,
     },
 
-    -- See https://github.com/obsidian-nvim/obsidian.nvim/wiki/Notes-on-configuration#statusline-component
-    statusline = {
+    ---@class obsidian.config.FooterOpts
+    ---@field enabled? boolean
+    ---@field format? string
+    ---@field hl_group? string
+    ---@field separator? string|false Set false to disable separator; set an empty string to insert a blank line separator.
+    footer = {
       enabled = true,
-      format = "{{properties}} properties {{backlinks}} backlinks {{words}} words {{chars}} chars",
+      format = "{{backlinks}} backlinks  {{properties}} properties  {{words}} words  {{chars}} chars",
+      hl_group = "Comment",
+      separator = string.rep("-", 80),
     },
+
+    ---@class obsidian.config.CheckboxOpts
+    ---Order of checkbox state chars, e.g. { " ", "x" }
+    ---@field order? string[]
+    checkbox = {
+      order = { " ", "~", "!", ">", "x" },
+    },
+
     -- My custom keymaps
     vim.keymap.set("n", "<leader>os", ":Obsidian search<CR>", { desc = "[O]bsidian [S]earch" }),
     vim.keymap.set("n", "<leader>of", ":Obsidian quick_switch<CR>", { desc = "[O]bsidian Quick Switch" }),

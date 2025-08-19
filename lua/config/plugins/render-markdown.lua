@@ -6,7 +6,7 @@ return {
     ---@type render.md.UserConfig
     opts = {
       enabled = true,
-      completions = { blink = { enabled = true } },
+      --completions = { blink = { enabled = true } },
     },
   }
 }
