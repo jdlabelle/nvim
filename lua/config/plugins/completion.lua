@@ -7,8 +7,14 @@ return {
       'folke/lazydev.nvim',
     },
 
-    version = '1.*',
+    --use a release tag to download pre-built binaries
+    --version = '1.*',
 
+    -- AND/OR build from source, requires rustup nightly https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust
+    build = 'cargo build --release',
+
+    ---@module 'blink.cmp'
+    ---@type blink.cmp.Config
     opts = {
       -- 'default' (recommended) for mappings similar to built-in completions (C-y to accept)
       -- 'super-tab' for mappings similar to vscode (tab to accept)
