@@ -21,6 +21,9 @@ return {
 
     vim.keymap.set("n", "<leader>fh", require('telescope.builtin').help_tags, { desc = 'Telescope [F]ind [H]elp' })
     vim.keymap.set("n", "<leader>ff", require('telescope.builtin').find_files, { desc = 'Telescope [F]ind [F]iles' })
+    vim.keymap.set("n", "<leader>fa", function()
+      require('telescope.builtin').find_files({ follow = true, hidden = true, no_ignore = true })
+    end, { desc = 'Telescope [F]ind [A]ll Files' })
 
     vim.keymap.set('n', '<leader>fb', require('telescope.builtin').buffers,
       { desc = 'Telescope [F]ind existing [B]uffers' })
