@@ -17,8 +17,13 @@ return {
     },
     config = function()
       local capabilities = require('blink.cmp').get_lsp_capabilities()
-      require("lspconfig").lua_ls.setup { capabilities = capabilities }
-      require("lspconfig").pyright.setup { capabilities = capabilities }
+
+      -- Define per server configs
+      vim.lsp.config("lua_ls", { capabilities = capabilities })
+      vim.lsp.config("pyright", { capabilities = capabilities })
+
+      -- Enable the servers
+      vim.lsp.enable({ "lua_ls", "pyright" })
 
       vim.api.nvim_create_autocmd('LspAttach', {
         group = vim.api.nvim_create_augroup('my.lsp', {}),
