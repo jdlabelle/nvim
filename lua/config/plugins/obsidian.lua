@@ -1,27 +1,9 @@
 return {
   "obsidian-nvim/obsidian.nvim",
-  version = "*", -- recommended, use latest release instead of latest commit
-  lazy = true,
+  version = "*", -- use latest release, remove to use latest commit
   ft = "markdown",
-  -- Replace the above line with this if you only want to load obsidian.nvim for markdown files in your vault:
-  -- event = {
-  --   -- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand'.
-  --   -- E.g. "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/*.md"
-  --   -- refer to `:h file-pattern` for more examples
-  --   "BufReadPre path/to/my-vault/*.md",
-  --   "BufNewFile path/to/my-vault/*.md",
-  -- },
-  dependencies = {
-    -- Required.
-    "nvim-lua/plenary.nvim",
-    -- Optional.
-    "saghen/blink.cmp",
-    "nvim-telescope/telescope.nvim",
-    "nvim-treesitter/nvim-treesitter",
-  },
-
   ---@module 'obsidian'
-  ---@type obsidian.config.ClientOpts
+  ---@type obsidian.config
   opts = {
     workspaces = {
       {
@@ -31,22 +13,23 @@ return {
         --   notes_subdir = "notes",
         -- },
       },
-      {
-        name = "thesis",
-        path = "~/thesis/notes"
-      },
     },
-
-    -- see below for full list of options 👇
 
     -- Optional, set the log level for obsidian.nvim. This is an integer corresponding to one of the log
     -- levels defined by "vim.log.levels.\*".
     log_level = vim.log.levels.INFO,
+    legacy_commands = false, -- this will be removed in the next major release
 
-    -- Move away from legacy commands IE `ObsidianBacklinks` to `Obsidian backlinks`
-    legacy_commands = false,
+    -- Optional, determines how certain commands open notes. The valid options are:
+    -- 1. "current" (the default) - to always open in the current window
+    -- 2. "vsplit" - to open in a vertical split if there's not already a vertical split
+    -- 3. "hsplit" - to open in a horizontal split if there's not already a horizontal split
+    -- 4. "vsplit_force" - always open a new vertical split if the file is not in the adjacent vsplit.
+    -- 5. "hsplit_force" - always open a new horizontal split if the file is not in the adjacent hsplit.
+    open_notes_in = "current",
 
     daily_notes = {
+      enabled = true,
       -- Optional, if you keep daily notes in a separate directory.
       folder = "dailies",
       -- Optional, if you want to change the date format for the ID of daily notes.
@@ -67,6 +50,8 @@ return {
       blink = true,
       -- Trigger completion at 2 chars.
       min_chars = 2,
+      match_case = true,
+      create_new = true,
     },
 
     -- Where to put new notes. Valid options are
@@ -75,8 +60,8 @@ return {
     new_notes_location = "current_dir",
 
     -- Optional, customize how note IDs are generated given an optional title.
-    ---@param title string|?
-    ---@return string
+    -- Default:
+    -- note_id_func = require("obsidian.builtin").zettel_id,
     note_id_func = function(title)
       -- Create note IDs in a Zettelkasten format with a timestamp and a suffix.
       -- In this case a note with the title 'My new note' will be given an ID that looks
@@ -96,84 +81,34 @@ return {
       return tostring(os.date("%Y%m%d%H%M")) .. "-" .. suffix
     end,
 
-    -- Optional, customize how note file names are generated given the ID, target directory, and title.
-    ---@param spec { id: string, dir: obsidian.Path, title: string|? }
-    ---@return string|obsidian.Path The full path to the new note.
     note_path_func = function(spec)
       -- This is equivalent to the default behavior.
       local path = spec.dir / tostring(spec.id)
-      return path:with_suffix ".md"
+      return path:with_suffix(".md", true)
     end,
 
-    -- Optional, customize how wiki links are formatted. You can set this to one of:
-    -- _ "use_alias_only", e.g. '[[Foo Bar]]'
-    -- _ "prepend*note_id", e.g. '[[foo-bar|Foo Bar]]'
-    -- * "prepend*note_path", e.g. '[[foo-bar.md|Foo Bar]]'
-    -- * "use_path_only", e.g. '[[foo-bar.md]]'
-    -- Or you can set it to a function that takes a table of options and returns a string, like this:
-    wiki_link_func = function(opts)
-      return require("obsidian.util").wiki_link_id_prefix(opts)
-    end,
+    ---@alias obsidian.link.LinkStyle "wiki" | "markdown" | fun(opts: obsidian.link.LinkCreationOpts): string
+    ---@alias obsidian.link.LinkFormat "shortest" | "relative" | "absolute"
+    ---@class obsidian.config.LinkOpts
+    ---@field style? obsidian.link.LinkStyle
+    ---@field format? obsidian.link.LinkFormat
+    link = {
+      style = "wiki",
+      format = "shortest",
+    },
 
-    -- Optional, customize how markdown links are formatted.
-    markdown_link_func = function(opts)
-      return require("obsidian.util").markdown_link(opts)
-    end,
-
-    -- Either 'wiki' or 'markdown'.
-    preferred_link_style = "wiki",
-
-    -- Optional, boolean or a function that takes a filename and returns a boolean.
-    -- `true` indicates that you don't want obsidian.nvim to manage frontmatter.
-    disable_frontmatter = false,
-
-    -- Optional, alternatively you can customize the frontmatter data.
-    ---@return table
-    note_frontmatter_func = function(note)
-      -- Add the title of the note as an alias.
-      if note.title then
-        note:add_alias(note.title)
-      end
-
-      local out = { id = note.id, aliases = note.aliases, tags = note.tags }
-
-      -- `note.metadata` contains any manually added fields in the frontmatter.
-      -- So here we just make sure those fields are kept in the frontmatter.
-      if note.metadata ~= nil and not vim.tbl_isempty(note.metadata) then
-        for k, v in pairs(note.metadata) do
-          out[k] = v
-        end
-      end
-
-      return out
-    end,
-
-    -- Optional, for templates (see https://github.com/obsidian-nvim/obsidian.nvim/wiki/Using-templates)
+    -- Optional, for templates (see https://github.com/obsidian-nvim/obsidian.nvim/wiki/Template#substitutions)
     templates = {
+      enabled = true,
       folder = "templates",
       date_format = "%Y-%m-%d",
       time_format = "%H:%M",
       -- A map for custom variables, the key should be the variable and the value a function
-      substitutions = {},
+      --substitutions = {},
       -- A map for configuring unique directories and paths for specific templates
       --- See: https://github.com/obsidian-nvim/obsidian.nvim/wiki/Template#customizations
-      customizations = {},
+      --customizations = {},
     },
-
-    -- Sets how you follow URLs
-    ---@param url string
-    follow_url_func = function(url)
-      vim.ui.open(url)
-      -- vim.ui.open(url, { cmd = { "firefox" } })
-    end,
-
-    -- Sets how you follow images
-    ---@param img string
-    follow_img_func = function(img)
-      vim.ui.open(img)
-      -- vim.ui.open(img, { cmd = { "loupe" } })
-    end,
-
     ---@class obsidian.config.OpenOpts
     ---
     ---Opens the file with current line number
@@ -181,9 +116,13 @@ return {
     ---
     ---Function to do the opening, default to vim.ui.open
     ---@field func? fun(uri: string)
+    ---
+    ---URI scheme whitelist, new values are appended to this list, and URIs with schemes in this list, will not be prompted to confirm opening
+    ---@field schemes? string[]
     open = {
       use_advanced_uri = false,
       func = vim.ui.open,
+      schemes = { "https", "http", "file", "mailto" },
     },
 
     picker = {
@@ -215,19 +154,13 @@ return {
     -- Optional, sort search results by "path", "modified", "accessed", or "created".
     -- The recommend value is "modified" and `true` for `sort_reversed`, which means, for example,
     -- that `:Obsidian quick_switch` will show the notes sorted by latest modified time
-    sort_by = "modified",
-    sort_reversed = true,
+    search = {
+      sort_by = "modified",
+      sort_reversed = true,
+      -- Set the maximum number of lines to read from notes on disk when performing certain searches.
+      max_lines = 1000,
+    },
 
-    -- Set the maximum number of lines to read from notes on disk when performing certain searches.
-    search_max_lines = 1000,
-
-    -- Optional, determines how certain commands open notes. The valid options are:
-    -- 1. "current" (the default) - to always open in the current window
-    -- 2. "vsplit" - to open in a vertical split if there's not already a vertical split
-    -- 3. "hsplit" - to open in a horizontal split if there's not already a horizontal split
-    -- 4. "vsplit_force" - always open a new vertical split if the file is not in the adjacent vsplit.
-    -- 5. "hsplit_force" - always open a new horizontal split if the file is not in the adjacent hsplit.
-    open_notes_in = "current",
 
     -- Optional, define your own callbacks to further customize behavior.
     -- callbacks = {
@@ -256,14 +189,47 @@ return {
     --   post_set_workspace = function(client, workspace) end,
     -- },
 
+    ---@class obsidian.config.UICharSpec
+    ---@field char string
+    ---@field hl_group string
+
+    ---@class obsidian.config.CheckboxSpec : obsidian.config.UICharSpec
+    ---@field char string
+    ---@field hl_group string
+
+    ---@class obsidian.config.UIStyleSpec
+    ---@field hl_group string
+
+    ---@class obsidian.config.UIOpts
+    ---
+    ---@field enable boolean
+    ---@field enabled boolean
+    ---@field ignore_conceal_warn boolean
+    ---@field update_debounce integer
+    ---@field max_file_length integer|?
+    ---@field checkboxes table<string, obsidian.config.CheckboxSpec>
+    ---@field bullets obsidian.config.UICharSpec|?
+    ---@field external_link_icon obsidian.config.UICharSpec
+    ---@field reference_text obsidian.config.UIStyleSpec
+    ---@field highlight_text obsidian.config.UIStyleSpec
+    ---@field tags obsidian.config.UIStyleSpec
+    ---@field block_ids obsidian.config.UIStyleSpec
+    ---@field hl_groups table<string, table>
     -- Optional, configure additional syntax highlighting / extmarks.
     -- This requires you have `conceallevel` set to 1 or 2. See `:help conceallevel` for more details.
     ui = {
-      enable = false,         -- set to false to disable all additional syntax features
-      -- ignore_conceal_warn = false, -- set to true to disable conceallevel specific warning
-      update_debounce = 200,  -- update delay after a text change (in milliseconds)
-      max_file_length = 5000, -- disable UI features for files with more than this many lines
+      enable = false,              -- set to false to disable all additional syntax features
+      ignore_conceal_warn = false, -- set to true to disable conceallevel specific warning
+      update_debounce = 200,       -- update delay after a text change (in milliseconds)
+      max_file_length = 5000,      -- disable UI features for files with more than this many lines
       -- Define how various check-boxes are displayed
+      checkboxes = {
+        [" "] = { char = "󰄱", hl_group = "obsidiantodo" },
+        ["~"] = { char = "󰰱", hl_group = "obsidiantilde" },
+        ["!"] = { char = "", hl_group = "obsidianimportant" },
+        [">"] = { char = "", hl_group = "obsidianrightarrow" },
+        ["x"] = { char = "", hl_group = "obsidiandone" },
+      },
       -- Use bullet marks for non-checkbox lists.
       bullets = { char = "•", hl_group = "ObsidianBullet" },
       external_link_icon = { char = "", hl_group = "ObsidianExtLinkIcon" },
@@ -289,9 +255,22 @@ return {
       },
     },
 
+    ---@class obsidian.config.UniqueNoteOpts
+    ---
+    ---@field enabled? boolean
+    ---@field format? string|fun():string
+    ---@field folder? string
+    ---@field template? string
+    unique_note = {
+      enabled = true,
+      format = "YYYYMMDDHHmm",
+      folder = nil,
+      template = nil,
+    },
+
     ---@class obsidian.config.AttachmentsOpts
-    ---Default folder to save images to, relative to the vault root.
-    ---@field img_folder? string
+    ---Default folder to save images to, relative to the vault root (/) or current dir (.)
+    ---@field folder? string
     ---Default name for pasted images
     ---@field img_name_func? fun(): string
     ---Default text to insert for pasted images, for customizing, see: https://github.com/obsidian-nvim/obsidian.nvim/wiki/Images
@@ -299,7 +278,7 @@ return {
     ---Whether to confirm the paste or not. Defaults to true.
     ---@field confirm_img_paste? boolean
     attachments = {
-      img_folder = "assets/imgs",
+      folder = "assets/imgs",
       img_name_func = function()
         return string.format("Pasted image %s", os.date "%Y%m%d%H%M%S")
       end,
@@ -319,17 +298,31 @@ return {
     },
 
     ---@class obsidian.config.CheckboxOpts
+    ---
+    ---@field enabled? boolean
+    ---
+    ---Whether to create new checkbox on paragraphs
+    ---@field create_new? boolean
+    ---
     ---Order of checkbox state chars, e.g. { " ", "x" }
     ---@field order? string[]
     checkbox = {
+      enabled = true,
+      create_new = true,
       order = { " ", "~", "!", ">", "x" },
     },
 
-    -- My custom keymaps
-    vim.keymap.set("n", "<leader>os", ":Obsidian search<CR>", { desc = "[O]bsidian [S]earch" }),
-    vim.keymap.set("n", "<leader>of", ":Obsidian quick_switch<CR>", { desc = "[O]bsidian Quick Switch" }),
-    vim.keymap.set("n", "<leader>on", ":Obsidian new<CR>", { desc = "[O]bsidian [N]ew Note" }),
-    vim.keymap.set("n", "<leader>ow", ":Obsidian workspace<CR>", { desc = "[O]bsidian Switch [W]orkspace" }),
-    vim.keymap.set("n", "<leader>ot", ":Obsidian new_from_template<CR>", { desc = "[O]bsidian new from [T]emplate" }),
+    ---@class obsidian.config.CommentOpts
+    ---@field enabled boolean
+    comment = {
+      enabled = false,
+    },
   },
+
+  -- My custom keymaps
+  vim.keymap.set("n", "<leader>os", ":Obsidian search<CR>", { desc = "[O]bsidian [S]earch" }),
+  vim.keymap.set("n", "<leader>of", ":Obsidian quick_switch<CR>", { desc = "[O]bsidian Quick Switch" }),
+  vim.keymap.set("n", "<leader>on", ":Obsidian new<CR>", { desc = "[O]bsidian [N]ew Note" }),
+  vim.keymap.set("n", "<leader>ow", ":Obsidian workspace<CR>", { desc = "[O]bsidian Switch [W]orkspace" }),
+  vim.keymap.set("n", "<leader>ot", ":Obsidian new_from_template<CR>", { desc = "[O]bsidian new from [T]emplate" }),
 }
