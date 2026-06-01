@@ -41,12 +41,12 @@ vim.keymap.set("n", "N", "Nzzzv")
 
 -- Highlight when yanking (copying) text
 -- Try it with 'yap' in normal mode
--- See `:help vim.highlight.on_yank()`
+-- See `:help vim.highlight.hl_op()`
 vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight when yanking (copying) text',
   group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
   callback = function()
-    vim.hl.on_yank()
+    vim.hl.hl_op()
   end,
 })
 
@@ -67,7 +67,7 @@ vim.keymap.set("n", "<leader>st", function()
   vim.cmd.term()
   vim.cmd.wincmd("J")
   vim.api.nvim_win_set_height(0, 15)
-  job_id = vim.bo.channel   -- goes with below
+  job_id = vim.bo.channel -- goes with below
 end, { desc = "Open built-in nvim terminal" })
 
 -- Run a custom command in the nvim terminal (you can be in a different window)
